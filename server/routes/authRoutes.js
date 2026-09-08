@@ -357,6 +357,14 @@ router.post(
 
 
       // ==========================================
+      // PRODUCTION COOKIE SETTINGS
+      // ==========================================
+
+      const isProduction =
+        process.env.NODE_ENV === "production";
+
+
+      // ==========================================
       // STORE JWT IN HTTP-ONLY COOKIE
       // ==========================================
 
@@ -368,10 +376,12 @@ router.post(
             true,
 
           secure:
-            process.env.NODE_ENV === "production",
+            isProduction,
 
           sameSite:
-            "lax",
+            isProduction
+              ? "none"
+              : "lax",
 
           maxAge:
             24 * 60 * 60 * 1000
@@ -475,6 +485,10 @@ router.post(
   "/logout",
   (req, res) => {
 
+    const isProduction =
+      process.env.NODE_ENV === "production";
+
+
     res.clearCookie(
       "token",
       {
@@ -482,10 +496,12 @@ router.post(
           true,
 
         secure:
-          process.env.NODE_ENV === "production",
+          isProduction,
 
         sameSite:
-          "lax"
+          isProduction
+            ? "none"
+            : "lax"
       }
     );
 
