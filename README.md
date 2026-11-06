@@ -155,3 +155,4 @@ npm run dev
   JWT_SECRET=<your-strong-256-bit-secret>
   CLIENT_URL=https://<your-frontend-domain>
   ```
+
