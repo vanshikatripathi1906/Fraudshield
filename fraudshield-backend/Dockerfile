@@ -13,3 +13,4 @@ WORKDIR /app
 COPY --from=build /app/target/fraudshield-backend-1.0.0.jar app.jar
 EXPOSE 5000
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
