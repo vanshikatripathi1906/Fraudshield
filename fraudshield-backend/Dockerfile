@@ -17,6 +17,9 @@ RUN ./mvnw clean package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 COPY --from=build /app/target/fraudshield-backend-1.0.0.jar app.jar
-EXPOSE 5000
-ENV PORT=5000
-ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-5000} -jar app.jar"]
+
+# Render defaults to port 10000 for web services.
+EXPOSE 10000
+ENV PORT=10000
+
+ENTRYPOINT ["sh", "-c", "java -Dserver.port=${PORT:-10000} -jar app.jar"]
