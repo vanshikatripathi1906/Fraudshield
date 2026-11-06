@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+*/node_modules/
+client/node_modules/
+
+# Maven build outputs
+target/
+*/target/
+fraudshield-backend/target/
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+*.local
+
+# IDE and OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+*.log
+
+# Build files
+dist/
+dist-ssr/
+client/dist/
