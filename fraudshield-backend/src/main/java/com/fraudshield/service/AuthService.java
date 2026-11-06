@@ -9,6 +9,7 @@ import com.fraudshield.model.User;
 import com.fraudshield.repository.UserRepository;
 import com.fraudshield.security.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -26,10 +27,33 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider tokenProvider;
 
+    @Value("${app.client.url:http://localhost:5173}")
+    private String clientUrl;
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:}")
+    private String cookieSameSite;
+
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider tokenProvider) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenProvider = tokenProvider;
+    }
+
+    private boolean isSecureCookie() {
+        if (cookieSecure) {
+            return true;
+        }
+        return clientUrl != null && clientUrl.toLowerCase().startsWith("https://");
+    }
+
+    private String getSameSitePolicy() {
+        if (cookieSameSite != null && !cookieSameSite.isBlank()) {
+            return cookieSameSite;
+        }
+        return isSecureCookie() ? "None" : "Lax";
     }
 
     public AuthResponse register(RegisterRequest request) {
@@ -91,14 +115,14 @@ public class AuthService {
         // Set HttpOnly cookie
         ResponseCookie cookie = ResponseCookie.from("token", token)
                 .httpOnly(true)
-                .secure(false) // Set to true if HTTPS production
-                .sameSite("Lax")
+                .secure(isSecureCookie())
+                .sameSite(getSameSitePolicy())
                 .path("/")
                 .maxAge(24 * 60 * 60)
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
-        return new AuthResponse("Login successful", new UserDto(user));
+        return new AuthResponse("Login successful", new UserDto(user), token);
     }
 
     public UserDto getProfile(String userId) {
@@ -110,8 +134,8 @@ public class AuthService {
     public void logout(HttpServletResponse response) {
         ResponseCookie cookie = ResponseCookie.from("token", "")
                 .httpOnly(true)
-                .secure(false)
-                .sameSite("Lax")
+                .secure(isSecureCookie())
+                .sameSite(getSameSitePolicy())
                 .path("/")
                 .maxAge(0)
                 .build();
