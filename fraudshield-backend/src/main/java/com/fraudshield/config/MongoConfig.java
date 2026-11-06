@@ -43,12 +43,24 @@ public class MongoConfig {
                 if (uri == null || uri.isBlank()) {
                     log.info("No custom MONGO_URI provided; using default MongoDB Atlas cluster URI");
                     uri = DEFAULT_ATLAS_URI;
-                } else {
-                    log.info("Using sanitized MongoDB URI starting with: {}", 
-                        uri.startsWith("mongodb+srv://") ? "mongodb+srv://..." : "mongodb://...");
                 }
 
-                return new ConnectionString(uri);
+                // If user entered mongodb+srv:// with multiple hosts (separated by comma),
+                // MongoDB requires mongodb:// instead of mongodb+srv:// (SRV only allows single host).
+                if (uri.startsWith("mongodb+srv://") && uri.contains(",")) {
+                    log.warn("Detected multiple hosts with mongodb+srv://. Automatically correcting protocol to mongodb://");
+                    uri = "mongodb://" + uri.substring("mongodb+srv://".length());
+                }
+
+                log.info("Connecting to MongoDB with protocol: {}", 
+                    uri.startsWith("mongodb+srv://") ? "mongodb+srv" : "mongodb");
+
+                try {
+                    return new ConnectionString(uri);
+                } catch (IllegalArgumentException ex) {
+                    log.error("Failed to parse configured MongoDB URI: {}. Falling back to default Atlas URI.", ex.getMessage());
+                    return new ConnectionString(DEFAULT_ATLAS_URI);
+                }
             }
         };
     }
